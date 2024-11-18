@@ -3,16 +3,16 @@ pygame.init()
 
 nb_case=1
 nb_ligne=1
-screen = pygame.display.set_mode((1000, 1000))
+screen = pygame.display.set_mode((800, 800))
 def afficher_damier():
     for h in range(10):
         global nb_ligne
         global nb_case
         for i in range(10):
 
-            x = i * 100
+            x = i * 80
             couleur = (65, 42, 42) if nb_case % 2 == 0 else (245, 245, 245)
-            pygame.draw.rect(screen, couleur, (x, -100+(nb_ligne*100), 100, 100))
+            pygame.draw.rect(screen, couleur, (x, -80+(nb_ligne*80), 80, 80))
             nb_case=nb_case+1
         nb_case = nb_case + 1
 
