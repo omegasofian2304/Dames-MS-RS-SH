@@ -6,95 +6,93 @@ import pygame
 # Initialisation de pygame
 pygame.init()
 
-# Fonction pour afficher le damier sans bordures
-def afficher_damier():
-    for i in range(nb_cases):
-        x = i * largeur_rectangle
-        couleur = (65, 42, 42) if i % 2 == 0 else (245, 245, 245)
-        pygame.draw.rect(screen, couleur, (x, 0, largeur_rectangle, hauteur_rectangle))
-    for i in range(nb_cases):
-        x = i * largeur_rectangle
-        couleur = (245, 245, 245) if i % 2 == 0 else (65, 42, 42)
-        pygame.draw.rect(screen, couleur, (x, 100, largeur_rectangle, hauteur_rectangle))
-
-# Fonction qui déplace le pion à droite
-def bouge_droite():
-    global positionx
-    # Déplace le pion d'une case à droite
-    positionx += 100
-    # Empêcher le pion de dépasser la fin
-    if positionx >= nb_cases * largeur_rectangle:
-        positionx = 910
-    screen.fill((255, 255, 255))
-    afficher_damier()
-    # Afficher le pion à sa position actuelle
-    screen.blit(pion_img, (positionx, position_y))
-
-# Fonction qui déplace le pion à gauche
-def bouge_gauche():
-    global positionx
-    # Déplace le pion d'une case à gauche
-    positionx -= 100
-    # Empêcher le pion de dépasser la première case
-    if positionx < 0:
-        positionx = 10
-    screen.fill((255, 255, 255))
-    afficher_damier()
-    # Afficher le pion à sa position actuelle
-    screen.blit(pion_img, (positionx, position_y))
-
-def bouge_haut():
-    global position_y
-    # Déplace le pion d'une case en haut
-    position_y -= 100
-    if position_y < 0:
-        position_y = 10
-    screen.fill((255, 255, 255))
-    afficher_damier()
-    # Afficher le pion à sa position actuelle
-    screen.blit(pion_img, (positionx, position_y))
-
-def bouge_bas():
-    global position_y
-    # Déplace le pion d'une case en haut
-    position_y += 100
-    if position_y > 100:
-        position_y = 112
-    screen.fill((255, 255, 255))
-    afficher_damier()
-    # Afficher le pion à sa position actuelle
-    screen.blit(pion_img, (positionx, position_y))
-
-# Variables
-largeur_rectangle = 100
-hauteur_rectangle = 100
+# Variables pour le damier
+largeur_case = 70
+hauteur_case = 70
 nb_cases = 10
-positionx = 10
-position_y = 10
-taille_case = 100
-y = 100
+nb_ligne = 1
+nb_case = 1
 
 # Fenêtre
-screen = pygame.display.set_mode((1000, 200))
+screen = pygame.display.set_mode((700, 700))
+
+# Fonction pour afficher le damier
+def afficher_damier():
+    global nb_case, nb_ligne
+    for h in range(nb_cases):  # Ligne
+        for i in range(nb_cases):  # Colonnes
+            x = i * largeur_case
+            y = h * hauteur_case
+            couleur = (65, 42, 42) if nb_case % 2 == 0 else (245, 245, 245)
+            pygame.draw.rect(screen, couleur, (x, y, largeur_case, hauteur_case))
+            nb_case += 1
+        nb_case = nb_case + 1
+    nb_ligne += 1
+
+# Fonction pour déplacer le pion à droite
+def bouge_droite():
+    global positionx
+    positionx += largeur_case
+    # Empêcher de sortir à droite
+    if positionx >= (nb_cases - 1) * largeur_case:
+        positionx = (nb_cases - 1) * largeur_case
+    afficher_damier()
+    screen.blit(pion_img, (positionx + offset_x, position_y + offset_y))
+
+# Fonction pour déplacer le pion à gauche
+def bouge_gauche():
+    global positionx
+    positionx -= largeur_case
+    # Empêcher de sortir à gauche
+    if positionx < 0:
+        positionx = 0
+    afficher_damier()
+    screen.blit(pion_img, (positionx + offset_x, position_y + offset_y))
+
+# Fonction pour déplacer le pion vers le haut
+def bouge_haut():
+    global position_y
+    position_y -= hauteur_case
+    # Empêcher de sortir en haut
+    if position_y < 0:
+        position_y = 0
+    afficher_damier()
+    screen.blit(pion_img, (positionx + offset_x, position_y + offset_y))
+
+# Fonction pour déplacer le pion vers le bas
+def bouge_bas():
+    global position_y
+    position_y += hauteur_case
+    # Empêcher de sortir en bas
+    if position_y >= (nb_cases - 1) * hauteur_case:
+        position_y = (nb_cases - 1) * hauteur_case
+    afficher_damier()
+    screen.blit(pion_img, (positionx + offset_x, position_y + offset_y))
+
+# Variables initiales
+positionx = 0
+position_y = 0
 
 # Charger l'image du pion
 pion_img = pygame.image.load("img\\MA-24_pion.png")
-pion_img = pygame.transform.scale(pion_img, (80, 80))
+pion_img = pygame.transform.scale(pion_img, (60, 60))  # Taille du pion
 
+# Calculer l'offset pour centrer le pion dans la case
+offset_x = (largeur_case - pion_img.get_width()) // 2
+offset_y = (hauteur_case - pion_img.get_height()) // 2
+
+# Afficher le damier et le pion à sa position initiale
 afficher_damier()
-# Afficher le pion à sa position actuelle
-screen.blit(pion_img, (positionx, position_y))
+screen.blit(pion_img, (positionx + offset_x, position_y + offset_y))
 
-
-# Boucle pour maintenir la fenêtre
+# Boucle principale du programme
 running = True
 while running:
-    # Récupérer les événements
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
         elif event.type == pygame.KEYDOWN:
-            # Déplacement du pion en fonction de la touche pressée
+            # Déplacer le pion en fonction de la touche pressée
             if event.key == pygame.K_RIGHT:
                 bouge_droite()
             elif event.key == pygame.K_LEFT:
@@ -111,6 +109,3 @@ while running:
 
 # Quitter pygame
 pygame.quit()
-
-#essaie d'envoyer
-
