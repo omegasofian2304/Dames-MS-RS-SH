@@ -24,7 +24,7 @@ def bouge_droite():
     positionx += 100
     # Empêcher le pion de dépasser la fin
     if positionx >= nb_cases * largeur_rectangle:
-        positionx = 912
+        positionx = 910
     screen.fill((255, 255, 255))
     afficher_damier()
     # Afficher le pion à sa position actuelle
@@ -113,3 +113,4 @@ while running:
 pygame.quit()
 
 #essaie d'envoyer
+
