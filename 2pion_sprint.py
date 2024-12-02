@@ -30,7 +30,32 @@ pos_2_x = 0
 pos_2_y = 0
 # Charger l'image du pion
 pion_img = pygame.image.load("img\\MA-24_pion.png")
-pion_img = pygame.transform.scale(pion_img, (60, 60))  # Taille du pion
+pion_img = pygame.transform.scale(pion_img, (60, 60)) # Taille du pion
+
+
+
+
+# Fonction pour colorier l'image du pion
+def colorier_image(image, couleur):
+    # Créer une surface de la même taille que l'image
+    overlay = pygame.Surface(image.get_size())
+    overlay.fill(couleur)
+
+    # Appliquer l'overlay (l'effet couleur)
+    image_coloree = image.copy()
+    image_coloree.blit(overlay, (0, 0), special_flags=pygame.BLEND_RGBA_MULT)  # L'effet de mélange
+
+    return image_coloree
+
+
+# Exemple d'utilisation dans le jeu
+rouge = (255, 0, 0)  # Couleur rouge
+bleu = (100, 100, 255) #couleur bleu
+pion_img_coloree_r = colorier_image(pion_img, rouge)
+pion_img_coloree_b = colorier_image(pion_img, bleu)
+
+# Ensuite, vous pouvez afficher cette image colorée à la place de l'originale
+
 
 # Calculer l'offset pour centrer le pion dans la case
 offset_x = (largeur_case - pion_img.get_width()) // 2
@@ -38,8 +63,8 @@ offset_y = (hauteur_case - pion_img.get_height()) // 2
 
 # Afficher le damier et le pion à sa position initiale
 afficher_damier()
-screen.blit(pion_img, (positionx + offset_x, position_y + offset_y))
-screen.blit(pion_img, (pos_2_x + offset_x, pos_2_y + offset_y))
+screen.blit(pion_img_coloree_b, (pos_2_x + offset_x, pos_2_y + offset_y))
+screen.blit(pion_img_coloree_r, (positionx + offset_x, position_y + offset_y))
 # Boucle principale du programme
 running = True
 while running:
@@ -74,7 +99,8 @@ while running:
             # Afficher le damier et le pion à la nouvelle position
             screen.fill((255, 255, 255))  # Effacer l'écran
             afficher_damier()  # Afficher le damier
-            screen.blit(pion_img, (positionx + offset_x, position_y + offset_y))  # Afficher le pion
+            screen.blit(pion_img_coloree_b, (pos_2_x + offset_x, pos_2_y + offset_y))
+            screen.blit(pion_img_coloree_r, (positionx + offset_x, position_y + offset_y))# Afficher les pions
 
     # Mettre à jour l'affichage
     pygame.display.update()
