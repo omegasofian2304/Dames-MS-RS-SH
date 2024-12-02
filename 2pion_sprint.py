@@ -48,6 +48,7 @@ def colorier_image(image, couleur):
     return image_coloree
 
 
+
 # Exemple d'utilisation dans le jeu
 rouge = (255, 0, 0)  # Couleur rouge
 bleu = (100, 100, 255) #couleur bleu
