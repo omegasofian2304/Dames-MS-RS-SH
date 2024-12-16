@@ -16,6 +16,7 @@ nb_case = 1
 # Fenêtre
 screen = pygame.display.set_mode((700, 700))
 
+
 # Fonction pour afficher le damier
 def afficher_damier():
     global nb_case, nb_ligne
@@ -29,45 +30,6 @@ def afficher_damier():
         nb_case = nb_case + 1
     nb_ligne += 1
 
-# Fonction pour déplacer le pion à droite
-def bouge_droite():
-    global positionx
-    positionx += largeur_case
-    # Empêcher de sortir à droite
-    if positionx >= (nb_cases - 1) * largeur_case:
-        positionx = (nb_cases - 1) * largeur_case
-    afficher_damier()
-    screen.blit(pion_img, (positionx + offset_x, position_y + offset_y))
-
-# Fonction pour déplacer le pion à gauche
-def bouge_gauche():
-    global positionx
-    positionx -= largeur_case
-    # Empêcher de sortir à gauche
-    if positionx < 0:
-        positionx = 0
-    afficher_damier()
-    screen.blit(pion_img, (positionx + offset_x, position_y + offset_y))
-
-# Fonction pour déplacer le pion vers le haut
-def bouge_haut():
-    global position_y
-    position_y -= hauteur_case
-    # Empêcher de sortir en haut
-    if position_y < 0:
-        position_y = 0
-    afficher_damier()
-    screen.blit(pion_img, (positionx + offset_x, position_y + offset_y))
-
-# Fonction pour déplacer le pion vers le bas
-def bouge_bas():
-    global position_y
-    position_y += hauteur_case
-    # Empêcher de sortir en bas
-    if position_y >= (nb_cases - 1) * hauteur_case:
-        position_y = (nb_cases - 1) * hauteur_case
-    afficher_damier()
-    screen.blit(pion_img, (positionx + offset_x, position_y + offset_y))
 
 # Variables initiales
 positionx = 0
@@ -91,18 +53,20 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-        elif event.type == pygame.KEYDOWN:
-            # Déplacer le pion en fonction de la touche pressée
-            if event.key == pygame.K_RIGHT:
-                bouge_droite()
-            elif event.key == pygame.K_LEFT:
-                bouge_gauche()
-            elif event.key == pygame.K_UP:
-                bouge_haut()
-            elif event.key == pygame.K_DOWN:
-                bouge_bas()
-            elif event.key == pygame.K_q:
-                running = False
+
+        # Déplacer le pion avec la souris
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            # Obtenir la position de la souris
+            mouse_x, mouse_y = pygame.mouse.get_pos()
+
+            # Calculer la case la plus proche de la souris
+            positionx = (mouse_x // largeur_case) * largeur_case
+            position_y = (mouse_y // hauteur_case) * hauteur_case
+
+            # Afficher le damier et le pion à la nouvelle position
+            screen.fill((255, 255, 255))  # Effacer l'écran
+            afficher_damier()  # Afficher le damier
+            screen.blit(pion_img, (positionx + offset_x, position_y + offset_y))  # Afficher le pion
 
     # Mettre à jour l'affichage
     pygame.display.update()
