@@ -3,6 +3,17 @@
 # Date : 16.12.2024
 import pygame
 
+# Initialisation de pygame
+pygame.init()
+
+# Variables pour le damier
+largeur_case = 70
+hauteur_case = 70
+nb_cases = 10
+
+# Fenêtre
+screen = pygame.display.set_mode((700, 700))
+
 # Fonction pour afficher le damier
 def afficher_damier():
     for ligne in range(nb_cases):
@@ -12,100 +23,96 @@ def afficher_damier():
             couleur = (65, 42, 42) if (ligne + colonne) % 2 == 0 else (245, 245, 245)
             pygame.draw.rect(screen, couleur, (x, y, largeur_case, hauteur_case))
 
-# Fonction pour dessiner l'aura autour du pion
-def dessiner_aura():
-    if aura_active:
-        centre_x = positionx + largeur_case // 2
-        centre_y = position_y + hauteur_case // 2
-        pygame.draw.circle(screen, couleur_contour, (centre_x, centre_y), 30, 5)
+# Classe pour représenter un pion
+class Pion:
+    def __init__(self, x, y, couleur):
+        self.x = x  # Position en x (coordonnée de la case)
+        self.y = y  # Position en y (coordonnée de la case)
+        self.couleur = couleur  # Couleur du pion ('blanc' ou 'noir')
+        self.selected = False  # État de sélection du pion
+        self.image = pygame.image.load("img\\MA-24_pion.png")  # Charger l'image du pion
+        self.image = pygame.transform.scale(self.image, (60, 60))  # Redimensionner l'image
+        self.offset_x = (largeur_case - self.image.get_width()) // 2  # Calculer l'offset horizontal
+        self.offset_y = (hauteur_case - self.image.get_height()) // 2  # Calculer l'offset vertical
 
-# Initialisation de pygame
-pygame.init()
+    # Afficher le pion à sa position actuelle
+    def afficher(self):
+        screen.blit(self.image, (self.x + self.offset_x, self.y + self.offset_y))
 
-# Variables pour le damier
-largeur_case = 70
-hauteur_case = 70
-nb_cases = 10
+    # Sélectionner le pion
+    def select(self):
+        self.selected = True
 
-# Fenêtre d'affichage
-screen = pygame.display.set_mode((700, 700))
+    # Désélectionner le pion
+    def deselect(self):
+        self.selected = False
 
-# Variables pour la position initiale du pion
-positionx = 0
-position_y = 630
+    # Déplacer le pion vers une nouvelle position
+    def deplacer(self, nouvelle_x, nouvelle_y):
+        self.x = nouvelle_x
+        self.y = nouvelle_y
 
-# Charger l'image du pion
-pion_img = pygame.image.load("img\\MA-24_pion.png")
-pion_img = pygame.transform.scale(pion_img, (60, 60))
+    # Vérifier si un clic est sur ce pion
+    def check_selection(self, mouse_x, mouse_y):
+        return self.x <= mouse_x <= self.x + largeur_case and self.y <= mouse_y <= self.y + hauteur_case
 
-# Calculer l'offset pour centrer le pion dans la case
-offset_x = (largeur_case - pion_img.get_width()) // 2
-offset_y = (hauteur_case - pion_img.get_height()) // 2
+# Créer la liste de pions
+pions = []
 
-# Variables pour l'aura
-aura_active = False
-couleur_contour = (255, 255, 0)
-rayon_contour = (pion_img.get_width() // 2) + 5
+# Disposition des pions blancs (sur les 4 premières lignes)
+for i in range(4):
+    for j in range(nb_cases):
+        if (i + j) % 2 == 1:  # Seulement sur les cases noires
+            pions.append(Pion(j * largeur_case, i * hauteur_case, 'blanc'))
 
-# Afficher le damier et le pion à sa position initiale
-afficher_damier()
-screen.blit(pion_img, (positionx + offset_x, position_y + offset_y))
+# Disposition des pions noirs (sur les 4 dernières lignes)
+for i in range(6, 10):
+    for j in range(nb_cases):
+        if (i + j) % 2 == 1:  # Seulement sur les cases noires
+            pions.append(Pion(j * largeur_case, i * hauteur_case, 'noir'))
+
+# Fonction pour afficher tous les pions
+def afficher_pions():
+    for pion in pions:
+        pion.afficher()
 
 # Boucle principale du programme
 running = True
-pion_selectionne = False  # Le pion n'est pas sélectionné au départ
+pion_selectionne = None  # Pion actuellement sélectionné
 while running:
     for event in pygame.event.get():
-        # Gérer la fermeture de la fenêtre
         if event.type == pygame.QUIT:
             running = False
 
-        # Cliquer sur le pion pour le sélectionner
+        # Cliquer pour sélectionner un pion
         if event.type == pygame.MOUSEBUTTONDOWN:
-            # Obtenir la position de la souris
             mouse_x, mouse_y = pygame.mouse.get_pos()
 
-            # Vérifier si le clic est sur le pion
-            if positionx <= mouse_x <= positionx + largeur_case and position_y <= mouse_y <= position_y + hauteur_case:
-                pion_selectionne = True
-                aura_active = True  # L'aura s'affiche une fois que le pion est sélectionné
+            # Si un pion est déjà sélectionné, essayer de le déplacer
+            if pion_selectionne is not None:
+                # Calculer la case cible
+                cible_x = (mouse_x // largeur_case) * largeur_case
+                cible_y = (mouse_y // hauteur_case) * hauteur_case
 
-        # Déplacer le pion une fois sélectionné
-        if event.type == pygame.MOUSEBUTTONDOWN and pion_selectionne:
-            # Obtenir la position de la souris
-            mouse_x, mouse_y = pygame.mouse.get_pos()
+                # Vérifier si le mouvement est une diagonale valide pour les dames classiques
+                if abs(cible_x - pion_selectionne.x) == largeur_case and abs(cible_y - pion_selectionne.y) == hauteur_case:
+                    pion_selectionne.deplacer(cible_x, cible_y)  # Déplacer le pion
 
-            # Calculer la case cible
-            cible_x = (mouse_x // largeur_case) * largeur_case
-            cible_y = (mouse_y // hauteur_case) * hauteur_case
+                # Désélectionner le pion après le déplacement
+                pion_selectionne.deselect()
+                pion_selectionne = None  # Réinitialiser la sélection
+            else:
+                # Si aucun pion n'est sélectionné, vérifier si on clique sur un pion
+                for pion in pions:
+                    if pion.check_selection(mouse_x, mouse_y):
+                        pion.select()  # Sélectionner le pion
+                        pion_selectionne = pion
+                        break
 
-            # Vérifier si le mouvement est une diagonale valide
-            if cible_x == positionx + largeur_case and cible_y == position_y - hauteur_case:
-                positionx = cible_x
-                position_y = cible_y
-                pion_selectionne = False
-                aura_active = False  # L'aura disparaît après le mouvement
-            if cible_x == positionx - largeur_case and cible_y == position_y - hauteur_case:
-                positionx = cible_x
-                position_y = cible_y
-                pion_selectionne = False
-                aura_active = False  # L'aura disparaît après le mouvement
-            if cible_x == positionx + largeur_case and cible_y == position_y + hauteur_case:
-                positionx = cible_x
-                position_y = cible_y
-                pion_selectionne = False
-                aura_active = False  # L'aura disparaît après le mouvement
-            if cible_x == positionx - largeur_case and cible_y == position_y + hauteur_case:
-                positionx = cible_x
-                position_y = cible_y
-                pion_selectionne = False
-                aura_active = False  # L'aura disparaît après le mouvement
-
-            # Afficher le damier et le pion à la nouvelle position
-            screen.fill((255, 255, 255))  # Effacer l'écran
-            afficher_damier()  # Afficher le damier
-            screen.blit(pion_img, (positionx + offset_x, position_y + offset_y))  # Afficher le pion
-            dessiner_aura()  # Dessiner l'aura autour du pion si sélectionné
+        # Effacer l'écran et redessiner tout
+        screen.fill((255, 255, 255))  # Effacer l'écran
+        afficher_damier()  # Afficher le damier
+        afficher_pions()  # Afficher les pions
 
     # Mettre à jour l'affichage
     pygame.display.update()
