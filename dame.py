@@ -1,6 +1,7 @@
-# Nom du programme : dame.py
-# Auteur : sofian
-# Date : 16.12.2024
+#titre : dame.py
+#auteur : Sofian
+#date : 16.12.2024
+
 # Importation des bibliothèques nécessaires
 from tkinter.messagebox import showinfo
 import time
@@ -163,7 +164,9 @@ def case_cliquee(pos):
             MARGE_Y + EPAISSEUR_BORDURE <= y < MARGE_Y + EPAISSEUR_BORDURE + 10 * TAILLE_CASE:
         colonne = (x - MARGE_X - EPAISSEUR_BORDURE) // TAILLE_CASE
         ligne = (y - MARGE_Y - EPAISSEUR_BORDURE) // TAILLE_CASE
+        print(f"Case cliquée : colonne {colonne}, ligne {ligne}")  # DEBUG
         return int(colonne), int(ligne)
+    print("Clic hors plateau")  # DEBUG
     return None
 
 
@@ -180,12 +183,72 @@ def case_occupee(case):
             return pion
     return None
 
+def captures_possibles(case, pion_selectionne):
+    """
+    Retourne une liste des cases d'arrivée possibles pour une capture depuis la case donnée.
+    """
+    captures = []
+    colonne_depart, ligne_depart = case
+    directions = [(-2, -2), (-2, 2), (2, -2), (2, 2)]  # Haut gauche, haut droite, bas gauche, bas droite
 
+    for direction in directions:
+        colonne_arrivee = colonne_depart + direction[0]
+        ligne_arrivee = ligne_depart + direction[1]
+        case_arrivee = (colonne_arrivee, ligne_arrivee)
+
+        # Vérifier que la case d'arrivée est dans les limites
+        if 0 <= colonne_arrivee < 10 and 0 <= ligne_arrivee < 10:
+            colonne_milieu = (colonne_depart + colonne_arrivee) // 2
+            ligne_milieu = (ligne_depart + ligne_arrivee) // 2
+            case_milieu = (colonne_milieu, ligne_milieu)
+            pion_intermediaire = case_occupee(case_milieu)
+
+            # Vérifier si une capture est possible
+            if (
+                pion_intermediaire and
+                pion_intermediaire.couleur != pion_selectionne.couleur and
+                not case_occupee(case_arrivee)
+            ):
+                captures.append(case_arrivee)
+
+    return captures
+
+
+def effectuer_captures_multiples(pion_selectionne, case_depart):
+    """
+    Permet d'enchaîner les captures multiples si possible.
+    """
+    case_actuelle = case_depart
+    while True:
+        captures = captures_possibles(case_actuelle, pion_selectionne)
+        if not captures:
+            break  # Arrêter si aucune capture possible
+
+        # Supposons que le joueur choisit automatiquement la première capture possible
+        case_suivante = captures[0]
+        colonne_depart, ligne_depart = case_actuelle
+        colonne_arrivee, ligne_arrivee = case_suivante
+
+        # Identifier le pion capturé
+        colonne_milieu = (colonne_depart + colonne_arrivee) // 2
+        ligne_milieu = (ligne_depart + ligne_arrivee) // 2
+        pion_intermediaire = case_occupee((colonne_milieu, ligne_milieu))
+
+        if pion_intermediaire:
+            pions.remove(pion_intermediaire)  # Supprimer le pion capturé
+            print(f"Pion capturé à la case {(colonne_milieu, ligne_milieu)}")
+
+        # Déplacer le pion sur la nouvelle case
+        pion_selectionne.deplacer(case_suivante)
+        case_actuelle = case_suivante
+
+
+# faut faire une boucle qui fait qu'on peut encore manger tant qu'une variable est True
 def mouvement_valide(case_depart, case_arrivee, pion_selectionne):
     """
     Vérifie si un mouvement est valide pour un pion donné.
-    Retourne un tuple (True/False, capture_effectuee, mouvement_multiple).
     """
+    print(f"Départ : {case_depart}, Arrivée : {case_arrivee}")  # DEBUG
     capture_effectuee = False
     mouvement_multiple = False
 
@@ -195,22 +258,32 @@ def mouvement_valide(case_depart, case_arrivee, pion_selectionne):
 
     # Vérifier que le mouvement est bien en diagonale
     if abs(colonne_arrivee - colonne_depart) != abs(ligne_arrivee - ligne_depart):
+        print("Mouvement non diagonal")  # DEBUG
         return False, capture_effectuee, mouvement_multiple
 
     # Vérifier si la case d'arrivée est une case valide (noire)
     if (colonne_arrivee + ligne_arrivee) % 2 == 0:
+        print("Case arrivée non valide (pas une case noire)")  # DEBUG
         return False, capture_effectuee, mouvement_multiple
 
     # Vérifier si la case d'arrivée est déjà occupée
     pion_occupe = case_occupee(case_arrivee)
     if pion_occupe:
+        print("Case arrivée occupée")  # DEBUG
         return False, capture_effectuee, mouvement_multiple
 
-    # Vérifier un mouvement simple vers l'avant ou latéral sur une seule case
-    if abs(colonne_arrivee - colonne_depart) == 1 and abs(ligne_arrivee - ligne_depart) == 1:
+    # Déterminer la direction d'avancement en fonction de la couleur
+    if pion_selectionne.couleur == COULEURS["ROUGE"]:  # Rouge monte
+        avance_correctement = (ligne_arrivee > ligne_depart)
+    else:  # Bleu descend
+        avance_correctement = (ligne_arrivee < ligne_depart)
+
+    # Mouvement simple vers l'avant (1 case diagonale)
+    if abs(colonne_arrivee - colonne_depart) == 1 and avance_correctement:
+        print("Mouvement simple valide")  # DEBUG
         return True, capture_effectuee, mouvement_multiple
 
-    # Vérifier si c'est une capture en avant avec un saut valide (2 cases en diagonale)
+    # Capture en diagonale (2 cases en avant ou en arrière)
     if abs(colonne_arrivee - colonne_depart) == 2 and abs(ligne_arrivee - ligne_depart) == 2:
         colonne_milieu = (colonne_depart + colonne_arrivee) // 2
         ligne_milieu = (ligne_depart + ligne_arrivee) // 2
@@ -218,27 +291,17 @@ def mouvement_valide(case_depart, case_arrivee, pion_selectionne):
         if pion_intermediaire and pion_intermediaire.couleur != pion_selectionne.couleur:
             pions.remove(pion_intermediaire)
             capture_effectuee = True
+            print("Capture valide effectuée")  # DEBUG
             return True, capture_effectuee, mouvement_multiple
 
-    # Vérifier les reculs avec capture valide uniquement
-    if abs(colonne_arrivee - colonne_depart) == 2 and ligne_arrivee < ligne_depart:
-        # Vérifier si un pion adverse est bien dans la trajectoire en arrière
-        colonne_milieu = (colonne_depart + colonne_arrivee) // 2
-        ligne_milieu = (ligne_depart + ligne_arrivee) // 2
-        pion_intermediaire = case_occupee((colonne_milieu, ligne_milieu))
-        if pion_intermediaire and pion_intermediaire.couleur != pion_selectionne.couleur:
-            pions.remove(pion_intermediaire)  # Capture en arrière réussie
-            capture_effectuee = True
-            return True, capture_effectuee, mouvement_multiple
-
-    # Vérifier s'il est possible de continuer avec plusieurs captures consécutives
-    if captures_possibles(pion_selectionne):
-        mouvement_multiple = True
-        return True, capture_effectuee, mouvement_multiple
+    # Recul interdit sans capture
+    if not avance_correctement:
+        print("Recul interdit sans capture")  # DEBUG
+        return False, capture_effectuee, mouvement_multiple
 
     # Aucun autre mouvement valide
+    print("Mouvement non valide")  # DEBUG
     return False, capture_effectuee, mouvement_multiple
-
 
 
 def verifier_fin_jeu():
@@ -322,30 +385,6 @@ def afficher_menu_principal():
     return choix
 
 
-def captures_possibles(pion):
-    """
-    Vérifie si un pion donné peut effectuer une capture.
-    Retourne True si une capture est possible, sinon False.
-    """
-    colonne, ligne = (pion.x - MARGE_X - EPAISSEUR_BORDURE) // TAILLE_CASE, \
-                     (pion.y - MARGE_Y - EPAISSEUR_BORDURE) // TAILLE_CASE
-
-    directions = [(-1, -1), (1, -1), (-1, 1), (1, 1)]  # Diagonales possibles
-    for d_col, d_ligne in directions:
-        colonne_milieu = colonne + d_col
-        ligne_milieu = ligne + d_ligne
-        colonne_finale = colonne + 2 * d_col
-        ligne_finale = ligne + 2 * d_ligne
-
-        # Vérifie que les positions restent dans les limites du plateau
-        if 0 <= colonne_milieu < 10 and 0 <= ligne_milieu < 10 and 0 <= colonne_finale < 10 and 0 <= ligne_finale < 10:
-            pion_intermediaire = case_occupee((colonne_milieu, ligne_milieu))
-            case_finale = case_occupee((colonne_finale, ligne_finale))
-            if pion_intermediaire and pion_intermediaire.couleur != pion.couleur and not case_finale:
-                return True  # Capture possible
-    return False  # Pas de capture possible
-
-
 # Afficher le menu principal
 afficher_menu_principal()
 
@@ -388,10 +427,11 @@ while jeu_en_cours:
                     # Gérer les captures
                     if capture_effectuee:
                         print("Capture effectuée.")
-                    if mouvement_multiple:
-                        print("Plusieurs captures possibles.")
-                    else:
-                        # Si aucune capture supplémentaire, passer au joueur suivant
+                        # Gérer les captures multiples
+                        effectuer_captures_multiples(pion_selectionne, case_arrivee)
+
+                    # Si aucune capture supplémentaire, passer au joueur suivant
+                    if not capture_effectuee or not captures_possibles(case_arrivee, pion_selectionne):
                         joueur_actuel = 'bleus' if joueur_actuel == 'rouges' else 'rouges'
 
                     # Vérifier la fin de la partie après le mouvement
