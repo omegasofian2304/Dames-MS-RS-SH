@@ -1,3 +1,7 @@
+# Titre : backend.py
+# Auteur : Sofian, Rodrigo, Milo
+# Date : 13.01.2025
+
 # Importation des bibliothèques nécessaires
 import pygame
 
