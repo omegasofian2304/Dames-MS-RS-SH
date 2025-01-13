@@ -1,3 +1,7 @@
+# Nom du programme : frontend.py
+# Auteur : Milo, Rodrigo, Sofian
+# Date 13.01.2025
+
 from tkinter.messagebox import showinfo
 
 from backend import (pions, COULEURS, img_pion, TAILLE_PION, TAILLE_CASE, EPAISSEUR_BORDURE, MARGE_X, MARGE_Y, Pion, \
